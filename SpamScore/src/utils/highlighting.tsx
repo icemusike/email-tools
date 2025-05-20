@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ReactElement } from 'react';
 import type { TriggeredKeyword } from "../data/keywords";
 
@@ -14,13 +13,13 @@ export const createHighlightedSegments = (
     return [text];
   }
 
-  const allIndices: { start: number; end: number; term: string | string[] }[] = [];
+  const allIndices: { start: number; end: number }[] = [];
   
   // Collect all valid indices
   triggers.forEach(trigger => {
     trigger.indices.forEach(index => {
       if (index.start < text.length && index.end <= text.length && index.start < index.end) {
-        allIndices.push({ ...index, term: trigger.term });
+        allIndices.push({ ...index });
       }
     });
   });
@@ -50,7 +49,7 @@ export const createHighlightedSegments = (
   const result: (string | ReactElement)[] = [];
   let lastProcessedEnd = 0;
 
-  uniqueIndices.forEach(({ start, end, term }, i) => {
+  uniqueIndices.forEach(({ start, end }, i) => {
     // Add text before the current highlight
     if (start > lastProcessedEnd) {
       result.push(text.substring(lastProcessedEnd, start));

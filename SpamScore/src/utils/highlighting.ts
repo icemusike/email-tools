@@ -14,12 +14,12 @@ export const createHighlightedSegments = (
     return [text];
   }
 
-  const allIndices: { start: number; end: number; term: string | string[] }[] = [];
+  const allIndices: { start: number; end: number }[] = [];
   triggers.forEach(trigger => {
     // Ensure indices are valid and within text bounds for safety, though calculateScore should provide valid ones.
     trigger.indices.forEach(index => {
       if (index.start < text.length && index.end <= text.length && index.start < index.end) {
-         allIndices.push({ ...index, term: trigger.term });
+         allIndices.push({ ...index });
       }
     });
   });
@@ -51,7 +51,7 @@ export const createHighlightedSegments = (
     // Example: if we processed "free money" (0-10), we skip "free" (0-4).
   });
   
-  uniqueIndices.forEach(({ start, end, term }, i) => {
+  uniqueIndices.forEach(({ start, end }, i) => {
     // Add text before the current highlight
     if (start > lastProcessedEnd) {
       result.push(text.substring(lastProcessedEnd, start));

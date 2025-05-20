@@ -20,9 +20,6 @@ const RadialGauge: React.FC<RadialGaugeProps> = ({ score }) => {
   const circumference = 2 * Math.PI * innerRadius;
   const offset = circumference - (clampedScore / 100) * circumference;
 
-  const gaugeBackgroundColor = '#E5E7EB'; // Tailwind gray-200
-  const darkGaugeBackgroundColor = '#4B5563'; // Tailwind gray-600
-
   return (
     <div className="flex flex-col items-center relative">
       <svg width="200" height="200" viewBox="0 0 200 200">

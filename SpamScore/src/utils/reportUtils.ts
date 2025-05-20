@@ -6,10 +6,6 @@ export const generateMarkdownReport = (
   totalScore: number,
   triggeredKeywords: TriggeredKeyword[],
 ): string => {
-  // Calculate subject and body scores from triggered keywords
-  let subjectScore = 0;
-  let bodyScore = 0;
-  
   const subjectKeywords = triggeredKeywords.filter(k => k.source === 'subject' || k.source === 'both');
   const bodyKeywords = triggeredKeywords.filter(k => k.source === 'body' || k.source === 'both');
   
