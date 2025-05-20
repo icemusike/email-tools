@@ -59,12 +59,14 @@ export const createHighlightedSegments = (
 
     // Add the highlighted part (using original casing from `text`)
     result.push(
-      <span 
-        key={`highlight-${start}-${i}`}
-        className="bg-yellow-300 dark:bg-yellow-500 dark:text-gray-900 p-0.5 rounded-sm"
-      >
-        {text.substring(start, end)}
-      </span>,
+      React.createElement(
+        'span',
+        { 
+          key: `highlight-${start}-${i}`,
+          className: "bg-yellow-300 dark:bg-yellow-500 dark:text-gray-900 p-0.5 rounded-sm"
+        },
+        text.substring(start, end)
+      )
     );
     lastProcessedEnd = end;
   });
