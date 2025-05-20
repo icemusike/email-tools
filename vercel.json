@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "cd SpamScore && npm install && npm run build",
+  "outputDirectory": "SpamScore/dist",
+  "installCommand": "cd SpamScore && npm install",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "github": {
+    "enabled": true,
+    "silent": true
+  }
+} 
