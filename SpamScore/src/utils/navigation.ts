@@ -9,8 +9,17 @@
  * @param path The new path to navigate to
  */
 export const navigate = (path: string): void => {
-  // Update URL without reloading the page
-  window.history.pushState({}, '', path);
+  // If we're using hash-based routing (for static file hosting compatibility)
+  // Only update the hash portion
+  if (window.location.hostname === 'localhost' || path === '/') {
+    // In development or for root path, use regular pushState
+    window.history.pushState({}, '', path);
+  } else {
+    // In production, use hash-based routing for better static file hosting compatibility
+    const hashPath = path.startsWith('/') ? path.substring(1) : path;
+    window.location.hash = hashPath;
+    return; // hash change will trigger its own event
+  }
   
   // Dispatch a popstate event to trigger route changes
   const navEvent = new PopStateEvent('popstate');
@@ -23,6 +32,12 @@ export const navigate = (path: string): void => {
  * @returns The current path
  */
 export const getCurrentPath = (): string => {
+  // If using hash-based routing and a hash exists, use that
+  if (window.location.hash && window.location.hash.startsWith('#')) {
+    return '/' + window.location.hash.substring(1);
+  }
+  
+  // Otherwise use the pathname
   return window.location.pathname || '/';
 };
 
@@ -34,5 +49,5 @@ export const getCurrentPath = (): string => {
  */
 export const isActive = (path: string): boolean => {
   const currentPath = getCurrentPath();
-  return currentPath === path || window.location.hash === `#${path.replace('/', '')}`;
+  return currentPath === path;
 }; 

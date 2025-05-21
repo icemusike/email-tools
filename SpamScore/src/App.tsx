@@ -7,6 +7,7 @@ import Header from './components/Header';
 import SubjectGenerator from './components/SubjectGenerator';
 import { createHighlightedSegments } from './utils/highlighting.tsx';
 import { generateMarkdownReport, copyToClipboard, downloadTextFile } from './utils/reportUtils';
+import { getCurrentPath } from './utils/navigation';
 
 function App() {
   const [subject, setSubject] = useState<string>('');
@@ -28,16 +29,25 @@ function App() {
 
   // Update current path based on window location
   useEffect(() => {
-    const path = window.location.pathname || '/';
+    const path = getCurrentPath();
+    console.log('Initial path on mount:', path);
     setCurrentPath(path);
 
     // Add event listener for navigation
     const handleNavigation = () => {
-      setCurrentPath(window.location.pathname || '/');
+      const newPath = getCurrentPath();
+      console.log('Navigation event triggered, new path:', newPath);
+      setCurrentPath(newPath);
     };
 
     window.addEventListener('popstate', handleNavigation);
-    return () => window.removeEventListener('popstate', handleNavigation);
+    // Also listen for hashchange events for hash-based routing
+    window.addEventListener('hashchange', handleNavigation);
+    
+    return () => {
+      window.removeEventListener('popstate', handleNavigation);
+      window.removeEventListener('hashchange', handleNavigation);
+    };
   }, []);
 
   const handleSubjectChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,11 +156,16 @@ function App() {
   // Simple client-side routing to render different tools
   const renderCurrentTool = () => {
     // For now, we'll handle just two routes
-    if (currentPath === '/subject-generator' || window.location.hash === '#subject-generator') {
+    const currentFullPath = getCurrentPath();
+    console.log('Current full path:', currentFullPath, 'State currentPath:', currentPath);
+    
+    if (currentFullPath === '/subject-generator') {
+      console.log('Rendering SubjectGenerator component');
       return <SubjectGenerator />;
     }
 
     // Default to spam score checker
+    console.log('Rendering default Spam Score component');
     return (
       <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
