@@ -31,6 +31,14 @@ interface GeneratedSubject {
   style: SubjectStyle;
 }
 
+// Define an interface for favorite emails
+interface FavoriteEmail {
+  id: string;
+  subject: string;
+  body: string;
+  date: string;
+}
+
 // Get API key using our utility (will be lazy loaded when needed)
 let OPENAI_API_KEY: string | undefined;
 
@@ -64,13 +72,17 @@ const SubjectGenerator: React.FC = () => {
   const [generatedSubjects, setGeneratedSubjects] = useState<GeneratedSubject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState<{subject?: number; preview?: number} | null>(null);
+  const [copied, setCopied] = useState<{subject?: number; preview?: number; body?: boolean} | null>(null);
   
   // Add state to track which subject line has the email composer open
   const [emailComposerOpen, setEmailComposerOpen] = useState<number | null>(null);
   const [emailBody, setEmailBody] = useState<string>('');
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [emailGenerationError, setEmailGenerationError] = useState<string | null>(null);
+  
+  // Add state for favorites
+  const [favorites, setFavorites] = useState<FavoriteEmail[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
   
   // Feature toggles
   const [useEmojis, setUseEmojis] = useState(false);
@@ -109,6 +121,23 @@ const SubjectGenerator: React.FC = () => {
       console.log('Environment check for OpenAI API key');
     }
   }, []);
+
+  // Load favorites from localStorage on component mount
+  useEffect(() => {
+    const storedFavorites = localStorage.getItem('emailFavorites');
+    if (storedFavorites) {
+      try {
+        setFavorites(JSON.parse(storedFavorites));
+      } catch (e) {
+        console.error('Error parsing stored favorites:', e);
+      }
+    }
+  }, []);
+
+  // Save favorites to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('emailFavorites', JSON.stringify(favorites));
+  }, [favorites]);
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
@@ -384,10 +413,104 @@ Please create a compelling email body that perfectly matches this subject line a
     window.open(mailtoLink, '_blank');
   };
 
+  // Copy email body to clipboard
+  const copyEmailBody = () => {
+    navigator.clipboard.writeText(emailBody)
+      .then(() => {
+        setCopied({ body: true });
+        setTimeout(() => setCopied(null), 2000);
+      })
+      .catch(() => {
+        setError('Failed to copy email body to clipboard');
+      });
+  };
+
+  // Add current email to favorites
+  const addToFavorites = (subject: string) => {
+    const newFavorite: FavoriteEmail = {
+      id: Date.now().toString(),
+      subject,
+      body: emailBody,
+      date: new Date().toLocaleString()
+    };
+    
+    setFavorites(prev => [newFavorite, ...prev]);
+    setEmailComposerOpen(null);
+  };
+  
+  // Remove a favorite email
+  const removeFavorite = (id: string) => {
+    setFavorites(prev => prev.filter(fav => fav.id !== id));
+  };
+  
+  // Use a favorite email
+  const useFavoriteEmail = (favorite: FavoriteEmail) => {
+    setEmailBody(favorite.body);
+    setEmailComposerOpen(null);
+    // Show a notification or take any other action you want
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">AI Subject Line Generator</h2>
       
+      {/* Toggle for favorites */}
+      {favorites.length > 0 && (
+        <div className="mb-6">
+          <button
+            onClick={() => setShowFavorites(!showFavorites)}
+            className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+            {showFavorites ? 'Hide Favorite Emails' : 'Show Favorite Emails'} ({favorites.length})
+          </button>
+        </div>
+      )}
+      
+      {/* Favorites Section */}
+      {showFavorites && favorites.length > 0 && (
+        <div className="mb-8 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div className="bg-gray-50 dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Favorite Emails</h3>
+          </div>
+          <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-80 overflow-y-auto">
+            {favorites.map(favorite => (
+              <div key={favorite.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium text-gray-900 dark:text-white">{favorite.subject}</h4>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => useFavoriteEmail(favorite)}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                      title="Use this email"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => removeFavorite(favorite.id)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                      title="Remove from favorites"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Saved on {favorite.date}</p>
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                  {favorite.body.slice(0, 150)}...
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           What is your email about?
@@ -664,7 +787,32 @@ Please create a compelling email body that perfectly matches this subject line a
                 {/* Email Composer */}
                 {emailComposerOpen === index && (
                   <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Compose Email</h4>
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">Compose Email</h4>
+                      {!isGeneratingEmail && (
+                        <button
+                          onClick={copyEmailBody}
+                          className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
+                          title="Copy email body"
+                        >
+                          {copied?.body ? (
+                            <>
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                              </svg>
+                              Copy All
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     
                     {/* Loading indicator */}
                     {isGeneratingEmail && (
@@ -700,11 +848,14 @@ Please create a compelling email body that perfectly matches this subject line a
                         Cancel
                       </button>
                       <button
-                        onClick={() => createEmail(subject.text)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        onClick={() => addToFavorites(subject.text)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center"
                         disabled={isGeneratingEmail || !emailBody.trim()}
                       >
-                        Open in Email Client
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                        Add to Favorites
                       </button>
                     </div>
                   </div>
