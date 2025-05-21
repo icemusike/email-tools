@@ -66,6 +66,10 @@ const SubjectGenerator: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<{subject?: number; preview?: number} | null>(null);
   
+  // Add state to track which subject line has the email composer open
+  const [emailComposerOpen, setEmailComposerOpen] = useState<number | null>(null);
+  const [emailBody, setEmailBody] = useState<string>('');
+  
   // Feature toggles
   const [useEmojis, setUseEmojis] = useState(false);
   const [usePersonalization, setUsePersonalization] = useState(false);
@@ -291,6 +295,25 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
     }
   };
 
+  const openEmailComposer = (index: number, subject: string, preview: string) => {
+    if (emailComposerOpen === index) {
+      // Close the composer if it's already open
+      setEmailComposerOpen(null);
+    } else {
+      // Open the composer for this subject
+      setEmailComposerOpen(index);
+      // Pre-populate with the preview text as a starting point
+      setEmailBody(preview + '\n\n');
+    }
+  };
+  
+  const createEmail = (subject: string) => {
+    // Create a mailto link with the subject and body
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
+    // Open the default email client
+    window.open(mailtoLink, '_blank');
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">AI Subject Line Generator</h2>
@@ -512,22 +535,34 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
                     </span>
                     <span className="text-gray-800 dark:text-gray-200 font-medium">{subject.text}</span>
                   </div>
-                  <button
-                    onClick={() => copyToClipboard(subject.text, index, 'subject')}
-                    className="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
-                    title="Copy subject line"
-                  >
-                    {copied?.subject === index ? (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openEmailComposer(index, subject.text, subject.previewText)}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
+                      title="Create email"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                       </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
-                        <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
-                      </svg>
-                    )}
-                  </button>
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(subject.text, index, 'subject')}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
+                      title="Copy subject line"
+                    >
+                      {copied?.subject === index ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                          <path d="M3 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6h-4.586l1.293-1.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L10.414 13H15v3a2 2 0 01-2 2H5a2 2 0 01-2-2V5zM15 11h2a1 1 0 110 2h-2v-2z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 
                 {/* Preview Text */}
@@ -555,6 +590,34 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
                     )}
                   </button>
                 </div>
+
+                {/* Email Composer */}
+                {emailComposerOpen === index && (
+                  <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Compose Email</h4>
+                    <textarea
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 mb-3"
+                      rows={6}
+                      placeholder="Write your email content here..."
+                      value={emailBody}
+                      onChange={(e) => setEmailBody(e.target.value)}
+                    />
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => setEmailComposerOpen(null)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => createEmail(subject.text)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        Open in Email Client
+                      </button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
