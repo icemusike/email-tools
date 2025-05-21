@@ -240,7 +240,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
           subjectLines = parsedContent;
         } else {
           // Last resort: look for any array in the response
-          const possibleArrays = Object.values(parsedContent).filter(val => Array.isArray(val));
+          const possibleArrays = Object.values(parsedContent).filter(val => Array.isArray(val)) as any[][];
           if (possibleArrays.length > 0) {
             // Use the first array found
             subjectLines = possibleArrays[0];
