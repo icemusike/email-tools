@@ -22,18 +22,42 @@
 
 @layer components {
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow p-6;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6;
   }
   
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors;
+    @apply py-2 px-4 rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
   
   .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-600 text-white;
+    @apply bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500;
   }
   
   .btn-success {
-    @apply bg-green-500 hover:bg-green-600 text-white;
+    @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-500;
+  }
+
+  .nav-link {
+    @apply text-gray-600 dark:text-gray-300 font-medium transition-colors duration-200 py-1 px-1;
+    position: relative;
+  }
+
+  .nav-link:hover {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    @apply bg-blue-600 dark:bg-blue-400;
+    transition: width 0.3s ease;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
   }
 }
