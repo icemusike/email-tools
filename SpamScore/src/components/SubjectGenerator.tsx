@@ -147,14 +147,29 @@ const SubjectGenerator: React.FC = () => {
     setSelectedStyle(e.target.value as SubjectStyle);
   };
 
-  const copyToClipboard = (text: string, index: number, type: 'subject' | 'preview') => {
+  const copyToClipboard = (text: string, index: number, type: 'subject' | 'preview' | 'body') => {
     navigator.clipboard.writeText(text)
       .then(() => {
-        setCopied(type === 'subject' ? { subject: index } : { preview: index });
+        if (type === 'body') {
+          setCopied({ body: true });
+        } else {
+          setCopied(type === 'subject' ? { subject: index } : { preview: index });
+        }
         setTimeout(() => setCopied(null), 2000);
       })
       .catch(() => {
         setError('Failed to copy to clipboard');
+      });
+  };
+
+  const copyEmailBody = () => {
+    navigator.clipboard.writeText(emailBody)
+      .then(() => {
+        setCopied({ body: true });
+        setTimeout(() => setCopied(null), 2000);
+      })
+      .catch(() => {
+        setError('Failed to copy email body to clipboard');
       });
   };
 
@@ -406,25 +421,6 @@ Please create a compelling email body that perfectly matches this subject line a
     }
   };
   
-  const createEmail = (subject: string) => {
-    // Create a mailto link with the subject and body
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
-    // Open the default email client
-    window.open(mailtoLink, '_blank');
-  };
-
-  // Copy email body to clipboard
-  const copyEmailBody = () => {
-    navigator.clipboard.writeText(emailBody)
-      .then(() => {
-        setCopied({ body: true });
-        setTimeout(() => setCopied(null), 2000);
-      })
-      .catch(() => {
-        setError('Failed to copy email body to clipboard');
-      });
-  };
-
   // Add current email to favorites
   const addToFavorites = (subject: string) => {
     const newFavorite: FavoriteEmail = {
