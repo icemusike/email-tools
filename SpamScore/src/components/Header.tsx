@@ -6,9 +6,6 @@ interface HeaderProps {
   toggleDarkMode: () => void;
 }
 
-// Define a type for our supported routes
-type AppRoute = '/' | '/subject-generator' | '/subject-line-tester' | '/email-template-builder' | '/deliverability-analyzer' | '/unsubscribe-link-generator';
-
 const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
