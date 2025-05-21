@@ -5,7 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="./vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SpamScore - Email content analyzer for spam triggers" />
+    <meta name="openai-api-key" content="%VITE_OPENAI_API_KEY%" />
     <title>SpamScore - Email Spam Analyzer</title>
+    <script>
+      // Initialize environment variables for client-side access
+      window.__ENV__ = window.__ENV__ || {};
+      // Try to get OpenAI API key from meta tag (Vercel will replace the placeholder at build time)
+      const apiKeyMeta = document.querySelector('meta[name="openai-api-key"]');
+      if (apiKeyMeta && apiKeyMeta.content && apiKeyMeta.content !== '%VITE_OPENAI_API_KEY%') {
+        window.__ENV__.OPENAI_API_KEY = apiKeyMeta.content;
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

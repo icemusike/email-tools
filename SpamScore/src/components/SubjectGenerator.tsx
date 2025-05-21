@@ -184,11 +184,23 @@ PREVIEW TEXT GUIDELINES
 • Never mislead - must be directly relevant to the email content
 • Should flow naturally from the subject line when read together
 
-PROCESS (silent)  
-1. Brainstorm at least 10 candidate subject lines.  
-2. Score them for hook strength, clarity, spam-risk, and length.  
-3. Create a complementary preview text for the top 5 subject lines.
-4. Return results in the specified JSON format.`
+OUTPUT FORMATTING
+You must format your response as a JSON object with EXACTLY this structure:
+{
+  "subject_lines": [
+    {
+      "subject": "First subject line text here",
+      "previewText": "First preview text here"
+    },
+    {
+      "subject": "Second subject line text here",
+      "previewText": "Second preview text here"
+    }
+    // and so on for all 5 subject lines
+  ]
+}
+
+Make sure to use the EXACT property names shown above: "subject_lines", "subject", and "previewText".`
           },
           {
             role: "user",
@@ -206,21 +218,71 @@ PROCESS (silent)
         throw new Error('No response from OpenAI');
       }
 
-      const parsedContent = JSON.parse(content);
-      const subjectLines = parsedContent.subject_lines || parsedContent.subjectLines || [];
+      console.log('Raw OpenAI response:', content);
       
-      if (!Array.isArray(subjectLines) || subjectLines.length === 0) {
-        throw new Error('Invalid response format from OpenAI');
+      try {
+        const parsedContent = JSON.parse(content);
+        console.log('Parsed content structure:', JSON.stringify(parsedContent, null, 2));
+        
+        // Try multiple possible response formats
+        let subjectLines = [];
+        
+        if (parsedContent.subject_lines && Array.isArray(parsedContent.subject_lines)) {
+          subjectLines = parsedContent.subject_lines;
+        } else if (parsedContent.subjectLines && Array.isArray(parsedContent.subjectLines)) {
+          subjectLines = parsedContent.subjectLines;
+        } else if (parsedContent.subjects && Array.isArray(parsedContent.subjects)) {
+          subjectLines = parsedContent.subjects;
+        } else if (parsedContent.lines && Array.isArray(parsedContent.lines)) {
+          subjectLines = parsedContent.lines;
+        } else if (Array.isArray(parsedContent)) {
+          // Maybe the response is directly an array
+          subjectLines = parsedContent;
+        } else {
+          // Last resort: look for any array in the response
+          const possibleArrays = Object.values(parsedContent).filter(val => Array.isArray(val));
+          if (possibleArrays.length > 0) {
+            // Use the first array found
+            subjectLines = possibleArrays[0];
+            console.log('Using fallback array:', subjectLines);
+          }
+        }
+        
+        if (!subjectLines || subjectLines.length === 0) {
+          throw new Error('No subject lines found in the response');
+        }
+        
+        // Create an array of GeneratedSubject objects with more flexible property mapping
+        const subjects: GeneratedSubject[] = subjectLines.map((item: any) => {
+          // Try to find subject line text with multiple property names
+          const text = item.subject || item.text || item.subject_line || item.subjectLine || item.line || '';
+          
+          // Try to find preview text with multiple property names
+          const previewText = 
+            item.previewText || 
+            item.preview || 
+            item.preview_text || 
+            item.email_preview || 
+            item.emailPreview || 
+            'Preview text not generated';
+          
+          return {
+            text,
+            previewText,
+            style: selectedStyle
+          };
+        });
+        
+        if (subjects.length === 0 || !subjects[0].text) {
+          throw new Error('Failed to extract subject lines from response');
+        }
+        
+        setGeneratedSubjects(subjects);
+      } catch (parseError: unknown) {
+        console.error('Error parsing OpenAI response:', parseError);
+        console.error('Raw content that failed to parse:', content);
+        throw new Error('Failed to parse OpenAI response: ' + (parseError instanceof Error ? parseError.message : String(parseError)));
       }
-
-      // Create an array of GeneratedSubject objects
-      const subjects: GeneratedSubject[] = subjectLines.map((item: any) => ({
-        text: item.subject || item.text,
-        previewText: item.previewText || item.preview || 'Preview text not generated',
-        style: selectedStyle
-      }));
-
-      setGeneratedSubjects(subjects);
     } catch (err) {
       console.error('Error generating subject lines:', err);
       setError('Failed to generate subject lines. Please check your API key or try again later.');
