@@ -297,7 +297,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
     }
   };
 
-  const openEmailComposer = async (index: number, preview: string, subject: string) => {
+  const openEmailComposer = async (index: number, subject: string) => {
     // If already open, just close it
     if (emailComposerOpen === index) {
       setEmailComposerOpen(null);
@@ -607,7 +607,7 @@ Please create a compelling email body that perfectly matches this subject line a
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => openEmailComposer(index, subject.previewText, subject.text)}
+                      onClick={() => openEmailComposer(index, subject.text)}
                       className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
                       title="Create email"
                     >
