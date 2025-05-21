@@ -29,8 +29,6 @@ const SubjectGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
-  const [apiKey, setApiKey] = useState(OPENAI_API_KEY || '');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(!OPENAI_API_KEY);
 
   // All available styles
   const subjectStyles: SubjectStyle[] = [
@@ -54,10 +52,6 @@ const SubjectGenerator: React.FC = () => {
     setSelectedStyle(e.target.value as SubjectStyle);
   };
 
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setApiKey(e.target.value);
-  };
-
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text)
       .then(() => {
@@ -75,13 +69,8 @@ const SubjectGenerator: React.FC = () => {
       return;
     }
 
-    if (!apiKey && !showApiKeyInput) {
-      setShowApiKeyInput(true);
-      return;
-    }
-
-    if (!apiKey && showApiKeyInput) {
-      setError('Please enter your OpenAI API key');
+    if (!OPENAI_API_KEY) {
+      setError('OpenAI API key is not configured. Please add it to your environment variables.');
       return;
     }
 
@@ -90,7 +79,7 @@ const SubjectGenerator: React.FC = () => {
 
     try {
       const openai = new OpenAI({
-        apiKey: apiKey,
+        apiKey: OPENAI_API_KEY,
         dangerouslyAllowBrowser: true // This is necessary for client-side use
       });
 
@@ -148,7 +137,7 @@ PROCESS (silent)
       setGeneratedSubjects(subjects);
     } catch (err) {
       console.error('Error generating subject lines:', err);
-      setError('Failed to generate subject lines. Please try again or check your API key.');
+      setError('Failed to generate subject lines. Please check your API key or try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -189,24 +178,6 @@ PROCESS (silent)
         </p>
       </div>
 
-      {showApiKeyInput && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            OpenAI API Key
-          </label>
-          <input
-            type="password"
-            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100"
-            placeholder="Enter your OpenAI API key"
-            value={apiKey}
-            onChange={handleApiKeyChange}
-          />
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Your API key is used only for this request and is not stored
-          </p>
-        </div>
-      )}
-
       <button
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center"
         onClick={generateSubjects}
@@ -221,7 +192,7 @@ PROCESS (silent)
             Generating...
           </>
         ) : (
-          showApiKeyInput && !apiKey ? 'Continue with API Key' : 'Generate Subject Lines'
+          'Generate Subject Lines'
         )}
       </button>
 
