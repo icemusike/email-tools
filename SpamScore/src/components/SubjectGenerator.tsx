@@ -69,6 +69,8 @@ const SubjectGenerator: React.FC = () => {
   // Add state to track which subject line has the email composer open
   const [emailComposerOpen, setEmailComposerOpen] = useState<number | null>(null);
   const [emailBody, setEmailBody] = useState<string>('');
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const [emailGenerationError, setEmailGenerationError] = useState<string | null>(null);
   
   // Feature toggles
   const [useEmojis, setUseEmojis] = useState(false);
@@ -295,15 +297,83 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
     }
   };
 
-  const openEmailComposer = (index: number, preview: string) => {
+  const openEmailComposer = async (index: number, preview: string, subject: string) => {
+    // If already open, just close it
     if (emailComposerOpen === index) {
-      // Close the composer if it's already open
       setEmailComposerOpen(null);
-    } else {
-      // Open the composer for this subject
-      setEmailComposerOpen(index);
-      // Pre-populate with the preview text as a starting point
-      setEmailBody(preview + '\n\n');
+      return;
+    }
+    
+    // Open the composer for this subject
+    setEmailComposerOpen(index);
+    
+    // Show loading state
+    setIsGeneratingEmail(true);
+    setEmailGenerationError(null);
+    
+    // Set a placeholder value while generating
+    setEmailBody('Generating your email content...');
+    
+    // Get the API key if not already loaded
+    if (!OPENAI_API_KEY) {
+      OPENAI_API_KEY = getOpenAIApiKey();
+    }
+    
+    if (!OPENAI_API_KEY) {
+      setEmailGenerationError('OpenAI API key is not configured. Please check your environment variables.');
+      setIsGeneratingEmail(false);
+      setEmailBody('');
+      return;
+    }
+    
+    try {
+      const openai = new OpenAI({
+        apiKey: OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true
+      });
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are a world-class email copywriter. Your task is to craft a compelling, persuasive email body that perfectly matches the subject line provided. The email should feel personalized, engaging, and drive the reader to take action.
+
+Key instructions:
+- Create email content that naturally flows from the subject line
+- Keep paragraphs short and scannable (2-3 sentences max)
+- Include 1-2 clear calls-to-action
+- Write in a conversational, professional tone
+- Use persuasive language that matches the style of the subject line
+- Don't use generic templates or placeholder text
+- Ensure the content is highly specific to the topic
+- Do not use placeholder URLs or fictional website domains`
+          },
+          {
+            role: "user",
+            content: `Subject line: "${subject}"
+            
+Original email description: "${description}"
+
+Please create a compelling email body that perfectly matches this subject line and description. The email should be personalized, engaging, and ready to send.`
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.7
+      });
+      
+      const generatedContent = response.choices[0]?.message?.content;
+      if (generatedContent) {
+        setEmailBody(generatedContent.trim());
+      } else {
+        throw new Error('No response content from OpenAI');
+      }
+    } catch (err) {
+      console.error('Error generating email content:', err);
+      setEmailGenerationError('Failed to generate email content. Please try again later.');
+      setEmailBody('');
+    } finally {
+      setIsGeneratingEmail(false);
     }
   };
   
@@ -537,7 +607,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => openEmailComposer(index, subject.previewText)}
+                      onClick={() => openEmailComposer(index, subject.previewText, subject.text)}
                       className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
                       title="Create email"
                     >
@@ -595,23 +665,44 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
                 {emailComposerOpen === index && (
                   <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Compose Email</h4>
+                    
+                    {/* Loading indicator */}
+                    {isGeneratingEmail && (
+                      <div className="mb-3">
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                          <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 text-center">Crafting your email...</p>
+                      </div>
+                    )}
+                    
+                    {/* Error message */}
+                    {emailGenerationError && (
+                      <div className="mb-3 p-2 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100 rounded-md text-sm">
+                        {emailGenerationError}
+                      </div>
+                    )}
+                    
                     <textarea
                       className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 mb-3"
-                      rows={6}
-                      placeholder="Write your email content here..."
+                      rows={8}
+                      placeholder="AI is generating your email content..."
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
+                      disabled={isGeneratingEmail}
                     />
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={() => setEmailComposerOpen(null)}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        disabled={isGeneratingEmail}
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => createEmail(subject.text)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        disabled={isGeneratingEmail || !emailBody.trim()}
                       >
                         Open in Email Client
                       </button>
