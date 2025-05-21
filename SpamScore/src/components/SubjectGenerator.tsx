@@ -225,7 +225,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
         console.log('Parsed content structure:', JSON.stringify(parsedContent, null, 2));
         
         // Try multiple possible response formats
-        let subjectLines = [];
+        let subjectLines: any[] = [];
         
         if (parsedContent.subject_lines && Array.isArray(parsedContent.subject_lines)) {
           subjectLines = parsedContent.subject_lines;
