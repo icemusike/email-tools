@@ -295,7 +295,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
     }
   };
 
-  const openEmailComposer = (index: number, subject: string, preview: string) => {
+  const openEmailComposer = (index: number, preview: string) => {
     if (emailComposerOpen === index) {
       // Close the composer if it's already open
       setEmailComposerOpen(null);
@@ -537,7 +537,7 @@ Make sure to use the EXACT property names shown above: "subject_lines", "subject
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => openEmailComposer(index, subject.text, subject.previewText)}
+                      onClick={() => openEmailComposer(index, subject.previewText)}
                       className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex-shrink-0"
                       title="Create email"
                     >
