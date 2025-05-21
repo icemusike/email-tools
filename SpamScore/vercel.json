@@ -7,5 +7,13 @@
   "framework": "vite",
   "github": {
     "silent": true
+  },
+  "env": {
+    "OPENAI_API_KEY": "@openai_api_key"
+  },
+  "build": {
+    "env": {
+      "OPENAI_API_KEY": "@openai_api_key"
+    }
   }
 } 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OpenAI from 'openai';
+import { getOpenAIApiKey } from '../utils/apiConfig';
 
 // Define subject line styles
 type SubjectStyle = 
@@ -30,8 +31,8 @@ interface GeneratedSubject {
   style: SubjectStyle;
 }
 
-// Get API key from environment variables
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+// Get API key using our utility (will be lazy loaded when needed)
+let OPENAI_API_KEY: string | undefined;
 
 // Add descriptions for each subject line style
 const styleDescriptions: Record<SubjectStyle, string> = {
@@ -95,6 +96,14 @@ const SubjectGenerator: React.FC = () => {
     'Emotional Appeal'
   ];
 
+  // Get API key on component initialization or when needed
+  useEffect(() => {
+    // We don't need to set it immediately, just when generating
+    if (!OPENAI_API_KEY) {
+      console.log('Environment check for OpenAI API key');
+    }
+  }, []);
+
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
   };
@@ -120,8 +129,13 @@ const SubjectGenerator: React.FC = () => {
       return;
     }
 
+    // Get the API key only when needed
     if (!OPENAI_API_KEY) {
-      setError('OpenAI API key is not configured. Please add it to your environment variables.');
+      OPENAI_API_KEY = getOpenAIApiKey();
+    }
+
+    if (!OPENAI_API_KEY) {
+      setError('OpenAI API key is not configured. Please check your environment variables or Vercel configuration.');
       return;
     }
 
