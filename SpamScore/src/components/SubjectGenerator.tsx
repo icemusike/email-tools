@@ -19,6 +19,9 @@ interface GeneratedSubject {
   style: SubjectStyle;
 }
 
+// Get API key from environment variables
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
 const SubjectGenerator: React.FC = () => {
   const [description, setDescription] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<SubjectStyle>('Curiosity');
@@ -26,8 +29,8 @@ const SubjectGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
-  const [apiKey, setApiKey] = useState('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
+  const [apiKey, setApiKey] = useState(OPENAI_API_KEY || '');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(!OPENAI_API_KEY);
 
   // All available styles
   const subjectStyles: SubjectStyle[] = [
@@ -96,10 +99,24 @@ const SubjectGenerator: React.FC = () => {
         messages: [
           {
             role: "system",
-            content: `You are an expert email marketer specializing in crafting high-converting subject lines.
-            Your task is to generate 5 unique, creative email subject lines in the "${selectedStyle}" style.
-            Keep each subject line under 50 characters and engaging.
-            Do not include any explanations or formatting, just provide the subject lines as a JSON array.`
+            content: `You are a world-class email copywriter and deliverability strategist.
+
+OBJECTIVE  
+Generate exactly **5** unique subject lines that maximise open-rate *and* inbox placement
+
+CONSTRAINTS  
+• ≤ 80 characters each (count every space & punctuation).  
+• No ALL-CAPS words, no more than one "!" or "?" total, no leading emojis.  
+• Avoid common spam-trigger words (e.g. "Free", "Urgent", "100%-off") or excessive symbols.  
+• May include one personalisation token such as {{first_name}} or an emoji **only if** it fits the requested style.  
+• Each line must carry at least one of these psychological hooks: curiosity, clear benefit, social proof, urgency, or exclusivity.  
+• Language & tone must match **"${selectedStyle}"** (e.g. playful, luxurious, minimal, etc.).  
+• Lines should be meaningfully different from one another (no tiny wording tweaks).  
+
+PROCESS (silent)  
+1. Brainstorm at least 10 candidate lines.  
+2. Score them for hook strength, clarity, spam-risk, and length.  
+3. Return the top 5 only.`
           },
           {
             role: "user",

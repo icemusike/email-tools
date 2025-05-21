@@ -52,3 +52,84 @@ export default tseslint.config({
   },
 })
 ```
+
+# Email Tools
+
+A collection of tools for email marketing including:
+
+- **Spam Score Checker**: Analyze email content for spam triggers and improve deliverability
+- **Subject Generator**: AI-powered email subject line generator with different styles
+- **Subject Line Tester**: Test and analyze the effectiveness of email subject lines
+- **Template Builder**: Build responsive email templates
+- **Deliverability Analyzer**: Analyze email deliverability factors
+- **Unsubscribe Link Generator**: Generate compliant unsubscribe links
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/email-tools.git
+cd email-tools
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+   - Copy the `.env.example` file to `.env`
+   - Add your OpenAI API key to the `.env` file:
+```bash
+VITE_OPENAI_API_KEY=your_openai_api_key_here
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+## Features
+
+### Spam Score Checker
+- Analyzes email content for spam triggers
+- Highlights problematic words and phrases
+- Provides suggestions for improvement
+- Generates a detailed report
+
+### Subject Generator
+- Creates high-converting subject lines using AI
+- Supports multiple styles (Prelaunch, Curiosity, Scarcity, etc.)
+- Uses OpenAI's latest models for best results
+
+## Technologies
+
+- React 
+- TypeScript
+- Vite
+- Tailwind CSS
+- OpenAI API
+
+## Environment Variables
+
+The following environment variables are required:
+
+- `VITE_OPENAI_API_KEY`: Your OpenAI API key for the Subject Generator
+
+## Development
+
+To run the development server:
+
+```bash
+npm run dev
+```
+
+To build for production:
+
+```bash
+npm run build
+```
+
+## License
+
+MIT
