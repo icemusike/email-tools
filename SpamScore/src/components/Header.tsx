@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { navigate, isActive } from '../utils/navigation';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -6,7 +7,7 @@ interface HeaderProps {
 }
 
 // Define a type for our supported routes
-type AppRoute = '/' | '/email-verifier' | '/subject-line-tester' | '/email-template-builder' | '/deliverability-analyzer' | '/unsubscribe-link-generator';
+type AppRoute = '/' | '/subject-generator' | '/subject-line-tester' | '/email-template-builder' | '/deliverability-analyzer' | '/unsubscribe-link-generator';
 
 const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,12 +16,10 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // This is a placeholder until we implement actual routing
-  const currentPath = window.location.pathname;
-
-  // Helper function to check if a path is active
-  const isActive = (path: string): boolean => {
-    return currentPath === path;
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(path);
+    setIsMenuOpen(false); // Close menu after navigation on mobile
   };
 
   return (
@@ -74,36 +73,42 @@ const Header: React.FC<HeaderProps> = ({ isDarkMode, toggleDarkMode }) => {
         <nav className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">
           <a 
             href="/" 
+            onClick={handleNavigation('/')}
             className={`nav-link ${isActive('/') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
             Spam Score Checker
           </a>
           <a 
-            href="/email-verifier" 
-            className={`nav-link ${isActive('/email-verifier') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
+            href="/subject-generator" 
+            onClick={handleNavigation('/subject-generator')}
+            className={`nav-link ${isActive('/subject-generator') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
-            Email Verifier
+            Subject Generator
           </a>
           <a 
             href="/subject-line-tester" 
+            onClick={handleNavigation('/subject-line-tester')}
             className={`nav-link ${isActive('/subject-line-tester') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
             Subject Line Tester
           </a>
           <a 
             href="/email-template-builder" 
+            onClick={handleNavigation('/email-template-builder')}
             className={`nav-link ${isActive('/email-template-builder') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
             Template Builder
           </a>
           <a 
             href="/deliverability-analyzer" 
+            onClick={handleNavigation('/deliverability-analyzer')}
             className={`nav-link ${isActive('/deliverability-analyzer') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
             Deliverability Analyzer
           </a>
           <a 
             href="/unsubscribe-link-generator" 
+            onClick={handleNavigation('/unsubscribe-link-generator')}
             className={`nav-link ${isActive('/unsubscribe-link-generator') ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : ''}`}
           >
             Unsubscribe Link Generator

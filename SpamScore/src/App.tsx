@@ -4,6 +4,7 @@ import { calculateScore } from './data/tempKeywords';
 import RadialGauge from './components/RadialGauge';
 import Accordion from './components/Accordion';
 import Header from './components/Header';
+import SubjectGenerator from './components/SubjectGenerator';
 import { createHighlightedSegments } from './utils/highlighting.tsx';
 import { generateMarkdownReport, copyToClipboard, downloadTextFile } from './utils/reportUtils';
 
@@ -21,8 +22,23 @@ function App() {
     return false;
   });
   const [copyStatus, setCopyStatus] = useState<string>('');
+  const [currentPath, setCurrentPath] = useState<string>('/');
   const highlightedContentRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Update current path based on window location
+  useEffect(() => {
+    const path = window.location.pathname || '/';
+    setCurrentPath(path);
+
+    // Add event listener for navigation
+    const handleNavigation = () => {
+      setCurrentPath(window.location.pathname || '/');
+    };
+
+    window.addEventListener('popstate', handleNavigation);
+    return () => window.removeEventListener('popstate', handleNavigation);
+  }, []);
 
   const handleSubjectChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSubject(event.target.value);
@@ -127,11 +143,16 @@ function App() {
     return 'text-red-500';
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      <div className="mx-auto px-4 py-8 max-w-6xl">
-        <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+  // Simple client-side routing to render different tools
+  const renderCurrentTool = () => {
+    // For now, we'll handle just two routes
+    if (currentPath === '/subject-generator' || window.location.hash === '#subject-generator') {
+      return <SubjectGenerator />;
+    }
 
+    // Default to spam score checker
+    return (
+      <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-6">
             <div className="card">
@@ -264,6 +285,16 @@ function App() {
             </div>
           )}
         </div>
+      </>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <div className="mx-auto px-4 py-8 max-w-6xl">
+        <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        
+        {renderCurrentTool()}
         
         <footer className="mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>Email Tools © 2025 | Tools for effective email marketing</p>
